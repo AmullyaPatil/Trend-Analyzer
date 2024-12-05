@@ -1,0 +1,19 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    text-align: center;
+}
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.movie {
+    display: inline-block;
+    margin: 15px;
+    text-align: center;
+}
+.movie img {
+    max-width: 200px;
+    height: auto;
+}

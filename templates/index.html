@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trending Movies</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>Live Trending Movies</h1>
+    <button id="fetchMovies">Show Trending Movies</button>
+    <div id="movies"></div>
+
+    <script>
+        document.getElementById("fetchMovies").addEventListener("click", function () {
+            fetch("/get_trending_movies")
+                .then(response => response.json())
+                .then(data => {
+                    const moviesDiv = document.getElementById("movies");
+                    moviesDiv.innerHTML = "";  // Clear previous results
+                    if (data.movies) {
+                        data.movies.forEach(movie => {
+                            const movieDiv = document.createElement("div");
+                            movieDiv.className = "movie";
+                            movieDiv.innerHTML = `
+                                <h3>${movie.title}</h3>
+                                ${movie.poster ? `<img src="${movie.poster}" alt="${movie.title}">` : "<p>No poster available</p>"}
+                            `;
+                            moviesDiv.appendChild(movieDiv);
+                        });
+                    } else if (data.error) {
+                        moviesDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    }
+                })
+                .catch(err => console.error("Error fetching movies:", err));
+        });
+    </script>
+</body>
+</html>
