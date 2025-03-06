@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trend Analyzer</title>
+    <link rel="stylesheet" href="static/styles.css">
+</head>
+<body>
+    <h1>Trending Movies</h1>
+    <div id="movies"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $.get("https://your-backend-url/get_trending_movies", function(data) {
+                if (data.movies) {
+                    data.movies.forEach(function(movie) {
+                        $('#movies').append(`<h3>${movie.title}</h3><img src="${movie.poster}" alt="${movie.title}">`);
+                    });
+                } else {
+                    $('#movies').text("Error loading movies.");
+                }
+            });
+        });
+    </script>
+</body>
+</html>
