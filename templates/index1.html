@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trending Movies & Reviews</title>
+</head>
+<body>
+    <h1>Trending Movies</h1>
+
+    {% for movie in movies %}
+        <hr>
+        <h2>{{ movie.title }}</h2>
+        <iframe width="560" height="315"
+                src="https://www.youtube.com/embed/{{ movie.video_id }}"
+                frameborder="0" allowfullscreen>
+        </iframe>
+
+        <h3>Top Comments:</h3>
+        <ul>
+            {% for comment in movie.comments %}
+                <li>{{ comment }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</body>
+</html>
