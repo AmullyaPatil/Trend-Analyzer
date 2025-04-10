@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Trending Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .trend-section { margin-bottom: 40px; }
+        .item { display: inline-block; margin: 10px; text-align: center; width: 150px; }
+        img { max-width: 100%; height: auto; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Live Trending Analyzer</h1>
+
+    <div id="buttons">
+        <button onclick="fetchTrend('movies')">Movies</button>
+        <button onclick="fetchTrend('books')">Books</button>
+        <button onclick="fetchTrend('music')">Music</button>
+        <button onclick="fetchTrend('apps')">Apps</button>
+        <button onclick="fetchTrend('fashion')">Fashion</button>
+        <button onclick="fetchTrend('tech')">Tech/Gadgets</button>
+        <button onclick="fetchTrend('news')">News</button>
+        <button onclick="fetchTrend('games')">Games</button>
+    </div>
+
+    <div id="content" class="trend-section"></div>
+
+    <script>
+        function fetchTrend(type) {
+            const routeMap = {
+                "movies": "/get_trending_movies",
+                "books": "/get_trending_books",
+                "music": "/get_trending_music",
+                "apps": "/get_trending_apps",
+                "fashion": "/get_trending_fashion",
+                "tech": "/get_trending_tech",
+                "news": "/get_trending_news",
+                "games": "/get_trending_games"
+            };
+
+            fetch(routeMap[type])
+                .then(res => res.json())
+                .then(data => {
+                    const contentDiv = document.getElementById("content");
+                    contentDiv.innerHTML = `<h2>Top ${type.charAt(0).toUpperCase() + type.slice(1)}</h2>`;
+                    const key = Object.keys(data)[0];
+                    data[key].forEach(item => {
+                        const div = document.createElement("div");
+                        div.className = "item";
+                        div.innerHTML = `
+                            <h4>${item.title}</h4>
+                            ${item.poster ? `<img src="${item.poster}" alt="${item.title}">` : "<p>No Image</p>"}
+                        `;
+                        contentDiv.appendChild(div);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>
