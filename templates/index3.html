@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Trend Analyzer</title>
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='images/bgimg.avif') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        .tabs button:hover {
+            background-color: #0056b3;
+        }
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .card {
+            width: 180px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            text-align: center;
+        }
+        .card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        .card-title {
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🔥 Trend Analyzer</h1>
+
+<div class="tabs">
+    <button onclick="fetchData('movies')">Movies</button>
+    <button onclick="fetchData('books')">Books</button>
+    <button onclick="fetchData('music')">Music</button>
+    <button onclick="fetchData('apps')">Apps</button>
+    <button onclick="fetchData('fashion')">Fashion</button>
+    <button onclick="fetchData('tech')">Tech</button>
+    <button onclick="fetchData('news')">News</button>
+    <button onclick="fetchData('games')">Games</button>
+</div>
+
+<div id="content" class="content"></div>
+
+<script>
+    function fetchData(category) {
+        const map = {
+            movies: "/get_trending_movies",
+            books: "/get_trending_books",
+            music: "/get_trending_music",
+            apps: "/get_trending_apps",
+            fashion: "/get_trending_fashion",
+            tech: "/get_trending_tech",
+            news: "/get_trending_news",
+            games: "/get_trending_games",
+        };
+
+        const endpoint = map[category];
+        const contentDiv = document.getElementById("content");
+        contentDiv.innerHTML = "<p>Loading...</p>";
+
+        fetch(endpoint)
+            .then(res => res.json())
+            .then(data => {
+                contentDiv.innerHTML = "";
+                const items = data[category] || [];
+
+                if (!items.length) {
+                    contentDiv.innerHTML = "<p>No data available.</p>";
+                    return;
+                }
+
+                items.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "card";
+
+                    const img = document.createElement("img");
+                    img.src = item.poster || "https://via.placeholder.com/180x250?text=No+Image";
+
+                    const title = document.createElement("div");
+                    title.className = "card-title";
+                    title.textContent = item.title;
+
+                    card.appendChild(img);
+                    card.appendChild(title);
+                    contentDiv.appendChild(card);
+                });
+            })
+            .catch(err => {
+                contentDiv.innerHTML = `<p>Error: ${err.message}</p>`;
+            });
+    }
+
+    // Load movies by default
+    fetchData("movies");
+</script>
+
+</body>
+</html>

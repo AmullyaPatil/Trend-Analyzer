@@ -5,9 +5,105 @@
     <title>Live Trending Analyzer</title>
     <link rel="stylesheet" href="/static/style.css">
     <style>
-        .trend-section { margin-bottom: 40px; }
-        .item { display: inline-block; margin: 10px; text-align: center; width: 150px; }
-        img { max-width: 100%; height: auto; border-radius: 8px; }
+        body {
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            font-family: Arial, sans-serif;
+            background-color: rgb(0, 0, 0);
+            padding: 20px;
+            color: white;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+
+        #buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #buttons button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        .trend-section {
+            margin-top: 20px;
+        }
+
+        .item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            width: 150px;
+            transition: transform 0.3s ease;
+        }
+
+        .item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .search-container input {
+            padding: 10px;
+            width: 200px;
+            margin-right: 10px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .search-container button:hover {
+            background-color: #218838;
+        }
+
+        .reviews-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .reviews-list li {
+            margin: 10px 0;
+            font-size: 1rem;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -22,6 +118,11 @@
         <button onclick="fetchTrend('tech')">Tech/Gadgets</button>
         <button onclick="fetchTrend('news')">News</button>
         <button onclick="fetchTrend('games')">Games</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="movieSearch" placeholder="Search movie..." />
+        <button onclick="searchMovie()">Search RottenTomato</button>
     </div>
 
     <div id="content" class="trend-section"></div>
@@ -44,8 +145,16 @@
                 .then(data => {
                     const contentDiv = document.getElementById("content");
                     contentDiv.innerHTML = `<h2>Top ${type.charAt(0).toUpperCase() + type.slice(1)}</h2>`;
-                    const key = Object.keys(data)[0];
-                    data[key].forEach(item => {
+
+                    let items = [];
+                    if (type === "music" && data.music) {
+                        items = data.music;
+                    } else {
+                        const key = Object.keys(data)[0];
+                        items = data[key];
+                    }
+
+                    items.forEach(item => {
                         const div = document.createElement("div");
                         div.className = "item";
                         div.innerHTML = `
@@ -54,6 +163,38 @@
                         `;
                         contentDiv.appendChild(div);
                     });
+                })
+                .catch(err => {
+                    document.getElementById("content").innerHTML = "<p>Error loading data.</p>";
+                    console.error("Error fetching data:", err);
+                });
+        }
+
+        function searchMovie() {
+            const name = document.getElementById("movieSearch").value;
+            if (!name) return alert("Please enter a movie name.");
+            fetch(`/get_movie_info/${encodeURIComponent(name)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const contentDiv = document.getElementById("content");
+                    contentDiv.innerHTML = `<h2>Rotten Tomatoes Reviews for "${name}"</h2>`;
+
+                    if (data.reviews && data.reviews.length > 0) {
+                        const reviewsList = document.createElement("ul");
+                        reviewsList.classList.add("reviews-list");
+                        data.reviews.forEach((review, index) => {
+                            const li = document.createElement("li");
+                            li.textContent = review;
+                            reviewsList.appendChild(li);
+                        });
+                        contentDiv.appendChild(reviewsList);
+                    } else {
+                        contentDiv.innerHTML += "<p>No reviews found for this movie.</p>";
+                    }
+                })
+                .catch(error => {
+                    const contentDiv = document.getElementById("content");
+                    contentDiv.innerHTML = "<p>An error occurred while fetching reviews.</p>";
                 });
         }
     </script>
