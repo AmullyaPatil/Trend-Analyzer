@@ -102,6 +102,7 @@
             font-size: 1rem;
             background-color: #f1f1f1;
             padding: 10px;
+            color: black;
             border-radius: 5px;
         }
     </style>
@@ -113,11 +114,7 @@
         <button onclick="fetchTrend('movies')">Movies</button>
         <button onclick="fetchTrend('books')">Books</button>
         <button onclick="fetchTrend('music')">Music</button>
-        <button onclick="fetchTrend('apps')">Apps</button>
-        <button onclick="fetchTrend('fashion')">Fashion</button>
-        <button onclick="fetchTrend('tech')">Tech/Gadgets</button>
         <button onclick="fetchTrend('news')">News</button>
-        <button onclick="fetchTrend('games')">Games</button>
     </div>
 
     <div class="search-container">
@@ -133,11 +130,9 @@
                 "movies": "/get_trending_movies",
                 "books": "/get_trending_books",
                 "music": "/get_trending_music",
-                "apps": "/get_trending_apps",
-                "fashion": "/get_trending_fashion",
-                "tech": "/get_trending_tech",
+                
                 "news": "/get_trending_news",
-                "games": "/get_trending_games"
+                
             };
 
             fetch(routeMap[type])
@@ -160,6 +155,7 @@
                         div.innerHTML = `
                             <h4>${item.title}</h4>
                             ${item.poster ? `<img src="${item.poster}" alt="${item.title}">` : "<p>No Image</p>"}
+                            ${item.url ? `<p><a href="${item.url}" target="_blank" style="color:lightblue;">Listen</a></p>` : ""}
                         `;
                         contentDiv.appendChild(div);
                     });
@@ -171,8 +167,9 @@
         }
 
         function searchMovie() {
-            const name = document.getElementById("movieSearch").value;
+            const name = document.getElementById("movieSearch").value.trim();
             if (!name) return alert("Please enter a movie name.");
+
             fetch(`/get_movie_info/${encodeURIComponent(name)}`)
                 .then(res => res.json())
                 .then(data => {
@@ -182,7 +179,7 @@
                     if (data.reviews && data.reviews.length > 0) {
                         const reviewsList = document.createElement("ul");
                         reviewsList.classList.add("reviews-list");
-                        data.reviews.forEach((review, index) => {
+                        data.reviews.forEach(review => {
                             const li = document.createElement("li");
                             li.textContent = review;
                             reviewsList.appendChild(li);
@@ -193,8 +190,8 @@
                     }
                 })
                 .catch(error => {
-                    const contentDiv = document.getElementById("content");
-                    contentDiv.innerHTML = "<p>An error occurred while fetching reviews.</p>";
+                    document.getElementById("content").innerHTML = "<p>An error occurred while fetching reviews.</p>";
+                    console.error("Error fetching movie info:", error);
                 });
         }
     </script>

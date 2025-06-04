@@ -8,7 +8,6 @@ app = Flask(__name__)
 
 TMDB_API_KEY = "4bf2a03e075776d08f4cd2f418a23e35"
 NEWS_API_KEY = "cab19e923c8c413585e2ad9d3fb257be"
-RAWG_API_KEY = "your_rawg_api_key"
 SPOTIFY_CLIENT_ID = "c2be84ba28fd4b0db8fc32591f003397"
 SPOTIFY_CLIENT_SECRET = "003a5b32475b4cc2a53bf80c52a7f38f"
 
@@ -53,7 +52,7 @@ def get_trending_books():
         return jsonify({"error": str(e)})
 
 
-# 🔥 Spotify Access Token Helper
+# Spotify Access Token Helper
 def get_spotify_access_token():
     url = "https://accounts.spotify.com/api/token"
     headers = {
@@ -67,65 +66,113 @@ def get_spotify_access_token():
     return response.json().get("access_token")
 
 
-# 🔥 Trending Music (Spotify - Top 50 India)
+# Trending Music (Spotify - Top 50 Global)
 @app.route("/get_trending_music")
 def get_trending_music():
+    token = get_spotify_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(GLOBAL_TOP_URL, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+
+    songs = []
+    for item in data.get("albums", {}).get("items", [])[:10]:
+        songs.append({
+            "name": item.get("name"),
+            "image": item.get("images", [{}])[0].get("url"),
+            "url": item.get("external_urls", {}).get("spotify")
+        })
+    return jsonify(songs)
+
+
+# Trending Fashion (Scraped from Vogue)
+@app.route("/get_trending_fashion")
+def get_trending_fashion():
     try:
-        access_token = get_spotify_access_token()
-        if not access_token:
-            return jsonify({"error": "Could not get Spotify access token"})
-
-        playlist_id = "37i9dQZF1DXbVhgADFy3im"  # 🎵 Spotify Playlist: Top 50 - India
-        url = f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=10"
-        headers = {"Authorization": f"Bearer {access_token}"}
+        url = "https://www.vogue.com/fashion"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
         response = requests.get(url, headers=headers)
-        data = response.json()
-
-        if "items" not in data:
-            return jsonify({"error": "No tracks found in the playlist"})
-
-        tracks = []
-        for item in data["items"]:
-            track = item.get("track")
-            if not track:
-                continue
-
-            title = track.get("name")
-            artists = ", ".join(artist["name"] for artist in track.get("artists", []))
-            image = track["album"]["images"][0]["url"] if track.get("album", {}).get("images") else None
-
-            tracks.append({
-                "title": f"{title} - {artists}",
-                "poster": image
-            })
-
-        return jsonify({"music": tracks})
-
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        fashion_items = []
+        
+        # Extract trending fashion items from Vogue
+        articles = soup.select('div.summary-item__content')[:10]
+        for article in articles:
+            title = article.select_one('h3.summary-item__hed')
+            image = article.select_one('img')
+            
+            if title and image:
+                fashion_items.append({
+                    "title": title.text.strip(),
+                    "poster": image.get('src') or image.get('data-src')
+                })
+        
+        return jsonify({"fashion": fashion_items[:10]})
     except Exception as e:
         return jsonify({"error": str(e)})
 
 
-# Trending Apps
+# Trending Apps (Top Free Apps from Play Store)
 @app.route("/get_trending_apps")
 def get_trending_apps():
-    return jsonify({
-        "apps": [
-            {"title": "Instagram", "poster": None},
-            {"title": "Threads", "poster": None},
-            {"title": "ShareChat", "poster": None}
-        ]
-    })
+    try:
+        url = "https://play.google.com/store/apps/top?hl=en_US"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        apps = []
+        
+        # Extract top free apps
+        app_cards = soup.select('div.ZmHEEd')[:10]
+        for card in app_cards:
+            title = card.select_one('div.WsMG1c')
+            image = card.select_one('img.T75of')
+            
+            if title and image:
+                apps.append({
+                    "title": title.text.strip(),
+                    "poster": image.get('src') or image.get('data-src')
+                })
+        
+        return jsonify({"apps": apps[:10]})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
-# Trending Fashion
-@app.route("/get_trending_fashion")
-def get_trending_fashion():
-    return jsonify({
-        "fashion": [
-            {"title": "Sabyasachi Collection 2025", "poster": None},
-            {"title": "Lakmé Fashion Week Highlights", "poster": None}
-        ]
-    })
+# Trending Games (Top Free Games from Play Store)
+@app.route("/get_trending_games")
+def get_trending_games():
+    try:
+        url = "https://play.google.com/store/apps/category/GAME/collection/topselling_free?hl=en_US"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        games = []
+        
+        # Extract top free games
+        game_cards = soup.select('div.ZmHEEd')[:10]
+        for card in game_cards:
+            title = card.select_one('div.WsMG1c')
+            image = card.select_one('img.T75of')
+            
+            if title and image:
+                games.append({
+                    "title": title.text.strip(),
+                    "poster": image.get('src') or image.get('data-src')
+                })
+        
+        return jsonify({"games": games[:10]})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 # Trending Tech
@@ -142,37 +189,16 @@ def get_trending_tech():
 # Trending News
 @app.route("/get_trending_news")
 def get_trending_news():
-    url = f"https://newsapi.org/v2/top-headlines?country=in&apiKey={NEWS_API_KEY}"
     try:
+        url = f"https://newsapi.org/v2/top-headlines?country=us&apiKey={NEWS_API_KEY}"
         data = requests.get(url).json()
-        news = [
-            {
-                "title": article["title"],
-                "poster": article.get("urlToImage")
-            }
-            for article in data.get("articles", [])[:10]
-        ]
+        news = [{
+            "title": article["title"],
+            "poster": article.get("urlToImage", None)
+        } for article in data.get("articles", [])[:10]]
         return jsonify({"news": news})
     except Exception as e:
-        return jsonify({"error": str(e)})
-
-
-# Trending Games
-@app.route("/get_trending_games")
-def get_trending_games():
-    url = f"https://api.rawg.io/api/games?key={RAWG_API_KEY}&ordering=-rating"
-    try:
-        data = requests.get(url).json()
-        games = [
-            {
-                "title": game["name"],
-                "poster": game.get("background_image")
-            }
-            for game in data.get("results", [])[:10]
-        ]
-        return jsonify({"games": games})
-    except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 
 # Movie Reviews from RottenTomatoes

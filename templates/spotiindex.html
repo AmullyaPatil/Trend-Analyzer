@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Trending Analyzer</title>
+    <style>
+        .column {
+            float: left;
+            width: 30%;
+            padding: 10px;
+        }
+        .row::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        .app-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Live Trending Analyzer</h1>
+    <button onclick="fetchApps()">Apps</button>
+    <div id="content"></div>
+
+    <script>
+        function fetchApps() {
+            fetch('/get_trending_apps')
+                .then(response => response.json())
+                .then(data => {
+                    const contentDiv = document.getElementById('content');
+                    contentDiv.innerHTML = '';
+
+                    const categories = ['free', 'paid', 'grossing'];
+                    const titles = ['Top Free Apps', 'Top Paid Apps', 'Top Grossing Apps'];
+
+                    const rowDiv = document.createElement('div');
+                    rowDiv.className = 'row';
+
+                    categories.forEach((category, index) => {
+                        const columnDiv = document.createElement('div');
+                        columnDiv.className = 'column';
+                        const heading = document.createElement('h2');
+                        heading.textContent = titles[index];
+                        columnDiv.appendChild(heading);
+
+                        data[category].forEach(app => {
+                            const appDiv = document.createElement('div');
+                            appDiv.className = 'app-item';
+                            appDiv.innerHTML = `<strong>${app.rank}. ${app.title}</strong><br>${app.developer}<br>${app.price}`;
+                            columnDiv.appendChild(appDiv);
+                        });
+
+                        rowDiv.appendChild(columnDiv);
+                    });
+
+                    contentDiv.appendChild(rowDiv);
+                })
+                .catch(error => {
+                    console.error('Error fetching app data:', error);
+                });
+        }
+    </script>
+</body>
+</html>
