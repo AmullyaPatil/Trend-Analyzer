@@ -1,66 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Live Trending Analyzer</title>
-    <style>
-        .column {
-            float: left;
-            width: 30%;
-            padding: 10px;
-        }
-        .row::after {
-            content: "";
-            clear: both;
-            display: table;
-        }
-        .app-item {
-            margin-bottom: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Live Trending Analyzer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: black;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      text-align: center;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .tab-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem;
+    }
+
+    .tab-buttons button {
+      padding: 10px 15px;
+      background-color: dodgerblue;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 2rem;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .card {
+      background-color: #1f1f1f;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .card img {
+      max-width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    input, button {
+      padding: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .search-box {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+
+    .search-box input {
+      width: 250px;
+    }
+
+    #movie-reviews {
+      margin-top: 1rem;
+    }
+  </style>
 </head>
 <body>
+
+  <header>
     <h1>🔥 Live Trending Analyzer</h1>
-    <button onclick="fetchApps()">Apps</button>
-    <div id="content"></div>
+  </header>
 
-    <script>
-        function fetchApps() {
-            fetch('/get_trending_apps')
-                .then(response => response.json())
-                .then(data => {
-                    const contentDiv = document.getElementById('content');
-                    contentDiv.innerHTML = '';
+  <div class="tab-buttons">
+    <button onclick="showTab('movies')">Movies</button>
+    <button onclick="showTab('books')">Books</button>
+    <button onclick="showTab('music')">Music</button>
+    <button onclick="showTab('apps')">Apps</button>
+    <button onclick="showTab('fashion')">Fashion</button>
+    <button onclick="showTab('tech')">Tech/Gadgets</button>
+    <button onclick="showTab('news')">News</button>
+    <button onclick="showTab('games')">Games</button>
+  </div>
 
-                    const categories = ['free', 'paid', 'grossing'];
-                    const titles = ['Top Free Apps', 'Top Paid Apps', 'Top Grossing Apps'];
+  <div class="search-box">
+    <input type="text" id="movieName" placeholder="Search movie...">
+    <button onclick="fetchReviews()" style="background-color: green; color: white;">Search RottenTomato</button>
+  </div>
 
-                    const rowDiv = document.createElement('div');
-                    rowDiv.className = 'row';
+  <!-- TAB CONTENT SECTIONS -->
+  <div id="movies" class="tab-content">
+    <h2>Top Movies</h2>
+    <div class="cards" id="movies-container"></div>
+  </div>
 
-                    categories.forEach((category, index) => {
-                        const columnDiv = document.createElement('div');
-                        columnDiv.className = 'column';
-                        const heading = document.createElement('h2');
-                        heading.textContent = titles[index];
-                        columnDiv.appendChild(heading);
+  <div id="books" class="tab-content">
+    <h2>Top Books</h2>
+    <div class="cards" id="books-container"></div>
+  </div>
 
-                        data[category].forEach(app => {
-                            const appDiv = document.createElement('div');
-                            appDiv.className = 'app-item';
-                            appDiv.innerHTML = `<strong>${app.rank}. ${app.title}</strong><br>${app.developer}<br>${app.price}`;
-                            columnDiv.appendChild(appDiv);
-                        });
+  <div id="music" class="tab-content">
+    <h2>Top Music</h2>
+    <div class="cards" id="music-container"></div>
+  </div>
 
-                        rowDiv.appendChild(columnDiv);
-                    });
+  <div id="apps" class="tab-content">
+    <h2>Top Apps</h2>
+    <div class="cards" id="apps-container"></div>
+  </div>
 
-                    contentDiv.appendChild(rowDiv);
-                })
-                .catch(error => {
-                    console.error('Error fetching app data:', error);
-                });
-        }
-    </script>
+  <div id="fashion" class="tab-content">
+    <h2>Top Fashion</h2>
+    <div class="cards" id="fashion-container"></div>
+  </div>
+
+  <div id="tech" class="tab-content">
+    <h2>Top Tech</h2>
+    <div class="cards" id="tech-container"></div>
+  </div>
+
+  <div id="news" class="tab-content">
+    <h2>Top News</h2>
+    <div class="cards" id="news-container"></div>
+  </div>
+
+  <div id="games" class="tab-content">
+    <h2>Top Games</h2>
+    <div class="cards" id="games-container"></div>
+  </div>
+
+  <div id="movie-reviews" class="tab-content">
+    <h2>RottenTomatoes Reviews</h2>
+    <div id="reviews-container"></div>
+  </div>
+
+  <script>
+    const sections = ['movies', 'books', 'music', 'apps', 'fashion', 'tech', 'news', 'games'];
+
+    function showTab(id) {
+      sections.forEach(section => {
+        document.getElementById(section).classList.remove('active');
+      });
+      document.getElementById(id).classList.add('active');
+    }
+
+    function populateData(endpoint, containerId, key) {
+      fetch(endpoint)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(containerId);
+          const items = data[key] || data;
+          container.innerHTML = '';
+          items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+              <img src="${item.poster || item.image || ''}" alt="${item.title || item.name}">
+              <p>${item.title || item.name}</p>
+            `;
+            container.appendChild(div);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    function fetchReviews() {
+      const name = document.getElementById('movieName').value.trim();
+      if (!name) return;
+      document.getElementById('movie-reviews').classList.add('active');
+      sections.forEach(section => document.getElementById(section).classList.remove('active'));
+
+      fetch(`/get_movie_info/${name}`)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('reviews-container');
+          container.innerHTML = '';
+          if (data.reviews) {
+            data.reviews.forEach(review => {
+              const p = document.createElement('p');
+              p.textContent = review;
+              container.appendChild(p);
+            });
+          } else {
+            container.innerHTML = `<p>${data.error || 'No reviews found.'}</p>`;
+          }
+        });
+    }
+
+    // Fetch data when page loads
+    window.onload = () => {
+      populateData('/get_trending_movies', 'movies-container', 'movies');
+      populateData('/get_trending_books', 'books-container', 'books');
+      populateData('/get_trending_music', 'music-container', 'music');
+      populateData('/get_trending_apps', 'apps-container', 'apps');
+      populateData('/get_trending_fashion', 'fashion-container', 'fashion');
+      populateData('/get_trending_tech', 'tech-container', 'tech');
+      populateData('/get_trending_news', 'news-container', 'news');
+      populateData('/get_trending_games', 'games-container', 'games');
+
+      // Default tab
+      showTab('movies');
+    }
+  </script>
+
 </body>
 </html>
